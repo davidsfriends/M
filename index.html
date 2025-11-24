@@ -6,7 +6,7 @@
     <!-- Browser Tab Title -->
     <title>davidsfriends</title> 
     <!-- Custom Heart Logo (Favicon) for the Browser Tab -->
-    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5wcm9qZWN0b3JnLzIwMDAvc3ZnIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTAwIDEwMCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PGNpcmNsZSBmaWxsPSIjMjU2NUVCIiBjeD0iNTAiIGN5PSI1MCIgcj0iNDgiLz48dGV4dCB4PSI1MCUiIHk9IjYwJSIgZG9taW5uYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IndoaXRlIj7ilIE8L3RleHQ+PC9jaXJjbGU+PC9zdmc+l">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5wcm9qZWN0b3JnLzIwMDAvc3ZnIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZW5hYmFnZy1yZ3JvdW5kPSJuZXcgMCAwIDEwMCAxMDAiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxjaXJjbGUgZmlsbD0iIzI1NjVFIiBjeD0iNTAiIGN5PSI1MCIgcj0iNDgiLz48dGV4dCB4PSI1MCUiIHk9IjYwJSIgZG9taW5uYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IndoaXRlIj7ilIE8L3RleHQ+PC9jaXJjbGU+PC9zdmc+l">
     
     <!-- Include Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -86,9 +86,6 @@
         function updateAuthStatus(userId) {
             isUserSignedIn = !!userId;
             authStatusElement.disabled = false;
-            
-            // Define the class for visual centering compensation (Moves form up 1rem)
-            // REMOVING dynamic compensation logic based on user feedback
             
             // Clear previous styles and set core interactive styles
             authStatusElement.className = 'fixed top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full shadow-lg transition duration-150 ease-in-out cursor-pointer hover:shadow-xl';
@@ -214,16 +211,23 @@
         async function handleDeleteAccount(event) {
             event.preventDefault();
             const form = event.target;
-            // Get elements from the confirmation modal (now two fields for name)
+            // Get elements from the confirmation modal (now using combined name)
             const studentIdInput = form.elements['confirm-delete-student-id'];
-            const firstNameInput = form.elements['confirm-delete-first-name'];
-            const lastNameInput = form.elements['confirm-delete-last-name'];
+            const fullNameInput = form.elements['confirm-delete-full-name']; // UPDATED
             const deleteMessageArea = document.getElementById('confirm-delete-message-area');
             const confirmButton = document.getElementById('confirm-delete-button');
 
             const enteredId = studentIdInput.value.trim();
-            const enteredFirstName = firstNameInput.value.trim();
-            const enteredLastName = lastNameInput.value.trim();
+            const enteredFullName = fullNameInput.value.trim(); // NEW
+
+            // Split the entered full name for validation
+            let enteredFirstName = '';
+            let enteredLastName = '';
+            const nameParts = enteredFullName.split(/\s+/).filter(p => p.length > 0);
+            if (nameParts.length > 0) { enteredFirstName = nameParts[0]; }
+            if (nameParts.length > 1) { enteredLastName = nameParts.slice(1).join(' '); }
+            // End name splitting logic
+
             const studentIdToDelete = currentStudentIdentity?.student_id;
             
             // Get the expected names from the stored identity
@@ -243,13 +247,15 @@
             const lastNameMatch = enteredLastName.toLowerCase() === storedLastName.toLowerCase();
 
             if (!idMatch || !firstNameMatch || !lastNameMatch) {
-                deleteMessageArea.textContent = 'Error: The Student ID, First Name, or Last Name does not match your logged-in account.';
+                // UPDATED ERROR MESSAGE
+                deleteMessageArea.textContent = 'Error: The Student ID or the First and Last Name does not match your logged-in account.';
                 deleteMessageArea.className = 'text-sm text-center text-red-600 font-medium mt-2';
                 return;
             }
 
             confirmButton.disabled = true;
-            confirmButton.textContent = 'Permanently Deleting...';
+            // TEXT CHANGE: "Permanently Deleting..." -> "Removing..."
+            confirmButton.textContent = 'Removing...';
             deleteMessageArea.textContent = '';
             deleteMessageArea.className = '';
 
@@ -267,7 +273,8 @@
                 confirmButton.textContent = 'Confirm Delete';
             } else {
                 // 3. Success! Log out and reset views
-                deleteMessageArea.textContent = 'Account successfully deleted. Closing modal and logging out...';
+                // TEXT CHANGE: "successfully deleted." -> "successfully removed."
+                deleteMessageArea.textContent = 'Account successfully removed. Closing modal and logging out...';
                 deleteMessageArea.className = 'text-sm text-center text-green-700 font-medium mt-2';
                 
                 // Clear state
@@ -276,8 +283,12 @@
                 // Perform Firebase Sign Out
                 await signOut(auth).catch(err => console.error("Firebase Sign-out error after Supabase delete:", err));
                 
+                // FIX: Call updateAuthStatus(null) to ensure the UI immediately reflects the signed-out state.
+                updateAuthStatus(null); 
+                
                 // Show success on main form area and switch view
-                messageArea.textContent = 'Your account has been permanently deleted.';
+                // TEXT CHANGE: "permanently deleted." -> "successfully removed."
+                messageArea.textContent = 'Your account has been successfully removed.';
                 messageArea.className = 'text-sm text-center text-green-700 font-medium';
                 
                 // Close modal and switch back to the main form view
@@ -343,13 +354,10 @@
                          // 1. CLEAR Student ID (user must enter it manually)
                         document.getElementById('confirm-delete-student-id').value = '';
                         
-                        // 2. CLEAR First Name
-                        document.getElementById('confirm-delete-first-name').value = '';
+                        // 2. CLEAR Full Name (Combined field)
+                        document.getElementById('confirm-delete-full-name').value = ''; 
                         
-                        // 3. CLEAR Last Name
-                        document.getElementById('confirm-delete-last-name').value = '';
-                        
-                        // 4. Clear any previous error message
+                        // 3. Clear any previous error message
                         document.getElementById('confirm-delete-message-area').textContent = '';
                         
                         document.getElementById('confirm-delete-modal').classList.remove('hidden');
@@ -403,12 +411,27 @@
             submitButton.textContent = 'Submitting...'; 
             messageArea.textContent = ''; 
 
-            // Get form values (now two separate fields for name)
+            // Get form values (now using a single combined name field)
             const studentId = document.getElementById('student-id').value;
-            const firstName = document.getElementById('first-name').value.trim(); // New
-            const lastName = document.getElementById('last-name').value.trim();   // New
+            const fullName = document.getElementById('full-name').value.trim(); // NEW
             const schoolEmail = document.getElementById('school-email').value;
             const gradeLevel = document.getElementById('grade-level').value; 
+            
+            // --- Logic to split Full Name ---
+            let firstName = '';
+            let lastName = '';
+            const nameParts = fullName.split(/\s+/).filter(p => p.length > 0);
+
+            if (nameParts.length > 0) {
+                // The first word is considered the first name
+                firstName = nameParts[0]; 
+            }
+
+            if (nameParts.length > 1) {
+                // The rest of the words are combined and considered the last name
+                lastName = nameParts.slice(1).join(' '); 
+            }
+            // ---------------------------------
             
             // Send data to Supabase 
             const { error } = await supabaseClient
@@ -416,8 +439,8 @@
                 .insert([
                     { 
                         student_id: studentId, 
-                        first_name: firstName, 
-                        last_name: lastName,   
+                        first_name: firstName, // Uses split first name
+                        last_name: lastName,   // Uses split last name
                         school_email: schoolEmail,
                         grade_level: gradeLevel,
                     }
@@ -641,25 +664,14 @@
                         </div>
                     </div>
                     
-                    <!-- FIRST NAME Field -->
+                    <!-- UPDATED: Combined First and Last Name Field -->
                     <div>
-                        <label for="first-name" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <label for="full-name" class="block text-sm font-medium text-gray-700">First and Last Name</label>
                         <div class="mt-1">
-                            <input type="text" name="first-name" id="first-name" 
-                                autocomplete="given-name"
+                            <input type="text" name="full-name" id="full-name" 
+                                autocomplete="name"
                                 class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900"
-                                placeholder="Jane" required>
-                        </div>
-                    </div>
-
-                    <!-- LAST NAME Field -->
-                    <div>
-                        <label for="last-name" class="block text-sm font-medium text-gray-700">Last Name</label>
-                        <div class="mt-1">
-                            <input type="text" name="last-name" id="last-name" 
-                                autocomplete="family-name"
-                                class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900"
-                                placeholder="Doe" required>
+                                placeholder="Jane Doe" required>
                         </div>
                     </div>
 
@@ -802,7 +814,7 @@
     </div>
     <!-- END LOGIN MODAL/OVERLAY -->
     
-    <!-- NEW: CONFIRM DELETE MODAL/OVERLAY -->
+    <!-- UPDATED: CONFIRM DELETE MODAL/OVERLAY -->
     <div id="confirm-delete-modal" class="modal-backdrop hidden">
         <div class="bg-gray-50 p-8 rounded-xl shadow-2xl w-full max-w-sm relative transform transition-all duration-300 scale-100 opacity-100">
             
@@ -814,7 +826,7 @@
 
             <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-red-700 mb-1">Confirm Account Deletion</h2>
-                <p class="text-sm text-gray-500">This action is permanent. Please confirm your identity by re-entering your student ID, first name, and last name.</p>
+                <p class="text-sm text-gray-500">This action is permanent. Please confirm your identity by re-entering your student ID and full name.</p>
             </div>
 
             <form id="confirm-delete-form" action="#" method="POST">
@@ -830,23 +842,13 @@
                         </div>
                     </div>
                     
-                    <!-- FIRST NAME Field for Confirmation (Manual entry required) -->
+                    <!-- UPDATED: Combined Full Name Field for Confirmation -->
                     <div>
-                        <label for="confirm-delete-first-name" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <label for="confirm-delete-full-name" class="block text-sm font-medium text-gray-700">First and Last Name</label>
                         <div class="mt-1">
-                            <input type="text" name="confirm-delete-first-name" id="confirm-delete-first-name" 
+                            <input type="text" name="confirm-delete-full-name" id="confirm-delete-full-name" 
                                 class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-3 border text-gray-900"
-                                placeholder="Re-enter your First Name" required>
-                        </div>
-                    </div>
-                    
-                    <!-- LAST NAME Field for Confirmation (Manual entry required) -->
-                    <div>
-                        <label for="confirm-delete-last-name" class="block text-sm font-medium text-gray-700">Last Name</label>
-                        <div class="mt-1">
-                            <input type="text" name="confirm-delete-last-name" id="confirm-delete-last-name" 
-                                class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm p-3 border text-gray-900"
-                                placeholder="Re-enter your Last Name" required>
+                                placeholder="Re-enter your First and Last Name" required>
                         </div>
                     </div>
                     
