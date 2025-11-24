@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Middle School Registration</title> <!-- BROWSER TAB TITLE -->
+    <!-- UPDATED: Browser Tab Title -->
+    <title>davidsfriends</title> 
+    <!-- NEW: Custom Heart Logo (Favicon) for the Browser Tab -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0OCIgZmlsbD0iIzI1NjNFQiIvPjx0ZXh0IHg9IjUwJSIgeT0iNjAlIiBkb21pbm5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI2MCIgZmlsbD0id2hpdGUiPuKUgTwvdGV4dD48L3N2ZyE=" type="image/svg+xml">
+    
     <!-- Include Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Include Supabase client -->
@@ -24,7 +28,6 @@
             z-index: -1;
             /* Light opacity for a subtle, non-distracting effect */
             opacity: 0.6; 
-            /* Removed explicit background color here to use the body's Tailwind bg-teal-100 */
         }
         /* Ensure the form content is above the canvas */
         .form-container {
@@ -44,10 +47,9 @@
 
     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md form-container">
         
-        <!-- HEADER SECTION (NEW CUSTOM TITLE) -->
+        <!-- HEADER SECTION -->
         <div class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">hi my friends this is the form</h1>
-            <!-- Subtitle removed -->
         </div>
         <!-- END HEADER SECTION -->
         
@@ -62,7 +64,7 @@
                     <div class="mt-1">
                         <input type="text" name="student-id" id="student-id" 
                                class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900"
-                               placeholder="e.g., 12345678" required>
+                               placeholder="12345678" required>
                     </div>
                 </div>
                 
@@ -73,7 +75,7 @@
                         <input type="text" name="full-name" id="full-name" 
                                autocomplete="name"
                                class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900"
-                               placeholder="e.g., Jane Doe" required>
+                               placeholder="Jane Doe" required>
                     </div>
                 </div>
 
@@ -84,23 +86,36 @@
                         <input id="school-email" name="school-email" type="email" 
                                autocomplete="email"
                                class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900"
-                               placeholder="e.g., jane.doe@school.edu" required>
+                               placeholder="jane.doe@school.edu" required>
                     </div>
                 </div>
                 
-                <!-- Grade Level Dropdown (7th & 8th Grade) -->
+                <!-- Grade Level Dropdown (K-12 Grades) -->
                 <div>
                     <label for="grade-level" class="block text-sm font-medium text-gray-700">Current Grade Level</label>
                     <div class="mt-1">
                         <select id="grade-level" name="grade-level" required
                                 class="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 border text-gray-900">
                             <option value="">-- Select Grade --</option>
+                            <option value="K">Kindergarten</option>
+                            <option value="1">1st Grade</option>
+                            <option value="2">2nd Grade</option>
+                            <option value="3">3rd Grade</option>
+                            <option value="4">4th Grade</option>
+                            <option value="5">5th Grade</option>
+                            <option value="6">6th Grade</option>
                             <option value="7">7th Grade</option>
                             <option value="8">8th Grade</option>
+                            <option value="9">9th Grade</option>
+                            <option value="10">10th Grade</option>
+                            <option value="11">11th Grade</option>
+                            <option value="12">12th Grade</option>
                         </select>
                     </div>
                 </div>
-
+                
+                <!-- Referral ID Field has been removed -->
+                
                 <!-- Submit Button (BLUE ACCENT) -->
                 <div>
                     <button type="submit" id="submit-button"
@@ -137,15 +152,15 @@
 
             // Disable button and show loading text
             submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
+            submitButton.textContent = 'Submitting...'; // Reverted loading message
             messageArea.textContent = ''; 
 
-            // Get form values, including the grade level
+            // Get form values
             const studentId = document.getElementById('student-id').value;
             const fullName = document.getElementById('full-name').value.trim();
             const schoolEmail = document.getElementById('school-email').value;
             const gradeLevel = document.getElementById('grade-level').value; 
-
+            
             // --- Logic to split Full Name ---
             let firstName = '';
             let lastName = '';
@@ -159,7 +174,7 @@
             }
             // ---------------------------------
 
-            // 4. Send data to Supabase (includes the new grade_level field)
+            // 4. Send data to Supabase (referral_id column is excluded from the insert)
             const { error } = await supabaseClient
                 .from('students')
                 .insert([
@@ -168,7 +183,8 @@
                         first_name: firstName, 
                         last_name: lastName,   
                         school_email: schoolEmail,
-                        grade_level: gradeLevel 
+                        grade_level: gradeLevel,
+                        // referral_id is now implicitly null in the database or left out
                     }
                 ]);
 
